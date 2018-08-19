@@ -30,9 +30,23 @@
 #include <string>
 #include <cstring>
 #include <queue>
+#include <exception>
+#include <stdexcept>
+
+#if defined(OOGL_PLATFORM_SDL)
+ #include <SDL.h>
+#endif 
 
 namespace GL
 {
+	class WindowException : public std::exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Window could not be created!";
+		}
+	};
+
 	/*
 		Window properties
 	*/
@@ -87,7 +101,15 @@ namespace GL
 		bool IsMouseButtonDown( MouseButton::mouse_button_t button );
 		bool IsKeyDown( Key::key_t key );
 
+#if defined(OOGL_PLATFORM_WINDOWS) || defined(OOGL_PLATFORM_LINUX)
 		Context& GetContext( uchar color = 32, uchar depth = 24, uchar stencil = 8, uchar antialias = 1 );
+#elif defined(OOGL_PLATFORM_SDL)
+		void        WindowEvent();
+		inline void SwapBuffers() const ;
+		bool        PollEvents() ;
+		Context&  GetContext();
+#endif 
+
 		void Present();
 
 	private:
@@ -108,6 +130,13 @@ namespace GL
 
 		LRESULT WindowEvent( UINT msg, WPARAM wParam, LPARAM lParam );
 		static LRESULT CALLBACK WindowEventHandler( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+
+#elif defined(OOGL_PLATFORM_SDL)
+
+		SDL_Window* m_WindowPtr{ nullptr };
+		uint32_t    style;
+		SDL_GLContext m_Context{ nullptr };
+
 #elif defined( OOGL_PLATFORM_LINUX )
 		::Window window;
 		Display* display;
@@ -124,7 +153,8 @@ namespace GL
 		Window( const Window& );
 		const Window& operator=( const Window& );
 
-		Key::key_t TranslateKey( uint code );
+		Key::key_t TranslateKey(SDL_Keycode code);
+
 	};
 }
 

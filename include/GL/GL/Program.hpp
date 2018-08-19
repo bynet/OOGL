@@ -26,7 +26,9 @@
 
 #include <GL/Platform.hpp>
 #include <GL/GL/GC.hpp>
-#include <GL/GL/Extensions.hpp>
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
 #include <GL/GL/Shader.hpp>
 #include <GL/Math/Mat3.hpp>
 #include <GL/Math/Mat4.hpp>
@@ -58,42 +60,47 @@ namespace GL
 	*/
 	class Program
 	{
+
+	private:
+		GLuint m_ID{ 0 };
+		static GC gc;
+		std::function<GLuint(void)> m_GeneratorFunc{ glCreateProgram };
+		std::function<void(GLuint)> m_DeleterFunc{ glDeleteProgram };
+
+
 	public:
 		Program();
-		Program( const Program& program );
-		Program( const Shader& vertex );
-		Program( const Shader& vertex, const Shader& fragment );
-		Program( const Shader& vertex, const Shader& fragment, const Shader& geometry );
+		Program(const Program& program);
+		Program(const Shader& vertex);
+		Program(const Shader& vertex, const Shader& fragment);
+		Program(const Shader& vertex, const Shader& fragment, const Shader& geometry);
 
 		~Program();
 
 		operator GLuint() const;
-		const Program& operator=( const Program& other );
+		const Program& operator=(const Program& other);
 
-		void Attach( const Shader& shader );
-		void TransformFeedbackVaryings( const char** varyings, uint count );
+		void Attach(const Shader& shader);
+		void TransformFeedbackVaryings(const char** varyings, uint count);
 		void Link();
 
 		std::string GetInfoLog();
 
-		Attribute GetAttribute( const std::string& name );
-		Uniform GetUniform( const std::string& name );
+		Attribute GetAttribute(const std::string& name);
+		Uniform GetUniform(const std::string& name);
 
-		void SetUniform( const Uniform& uniform, int value );
-		void SetUniform( const Uniform& uniform, float value );
-		void SetUniform( const Uniform& uniform, const Vec2& value );
-		void SetUniform( const Uniform& uniform, const Vec3& value );
-		void SetUniform( const Uniform& uniform, const Vec4& value );
-		void SetUniform( const Uniform& uniform, const float* values, uint count );
-		void SetUniform( const Uniform& uniform, const Vec2* values, uint count );
-		void SetUniform( const Uniform& uniform, const Vec3* values, uint count );
-		void SetUniform( const Uniform& uniform, const Vec4* values, uint count );
-		void SetUniform( const Uniform& uniform, const Mat3& value );
-		void SetUniform( const Uniform& uniform, const Mat4& value );
+		void SetUniform(const Uniform& uniform, int value);
+		void SetUniform(const Uniform& uniform, float value);
+		void SetUniform(const Uniform& uniform, const Vec2& value);
+		void SetUniform(const Uniform& uniform, const Vec3& value);
+		void SetUniform(const Uniform& uniform, const Vec4& value);
+		void SetUniform(const Uniform& uniform, const float* values, GLuint count);
+		void SetUniform(const Uniform& uniform, const Vec2* values, GLuint count);
+		void SetUniform(const Uniform& uniform, const Vec3* values, GLuint count);
+		void SetUniform(const Uniform& uniform, const Vec4* values, GLuint count);
+		void SetUniform(const Uniform& uniform, const Mat3& value);
+		void SetUniform(const Uniform& uniform, const Mat4& value);
 
-	private:
-		static GC gc;
-		GLuint obj;
 	};
 }
 

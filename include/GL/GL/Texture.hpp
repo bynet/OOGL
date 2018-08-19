@@ -26,9 +26,14 @@
 
 #include <GL/Platform.hpp>
 #include <GL/GL/GC.hpp>
-#include <GL/GL/Extensions.hpp>
+
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
+
 #include <GL/Util/Image.hpp>
 
+using namespace std; 
 namespace GL
 {
 	/*
@@ -215,10 +220,13 @@ namespace GL
 		void SetBorderColor( const Color& color );
 
 		void GenerateMipmaps();
+		void Bind(uchar unit);
 
 	private:
 		static GC gc;
-		GLuint obj;
+		GLuint m_ID;
+		function<void(GLsizei, ID*)> m_GeneratorFunc{ glGenTextures };
+		function<void(COUNT, const ID*)> m_DeleterFunc{ glDeleteTextures };
 	};
 }
 

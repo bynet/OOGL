@@ -26,7 +26,11 @@
 
 #include <GL/Platform.hpp>
 #include <GL/GL/GC.hpp>
-#include <GL/GL/Extensions.hpp>
+
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
+
 #include <exception>
 #include <string>
 
@@ -65,29 +69,44 @@ namespace GL
 		std::string infoLog;
 	};
 
+	class ShaderFileException : public std::exception 
+	{
+		virtual const char* what() const throw()
+		{
+			return "Failed to open shader file " ;
+		}
+	};
+	
+
 	/*
 		Shader
 	*/
 	class Shader
 	{
 	public:
-		Shader( const Shader& other );
-		Shader( ShaderType::shader_type_t type );
-		Shader( ShaderType::shader_type_t type, const std::string& code );
+		Shader(const Shader& other);
+		Shader(ShaderType::shader_type_t type);
+		Shader(ShaderType::shader_type_t type, const std::string& code);
 
 		~Shader();
 
 		operator GLuint() const;
-		const Shader& operator=( const Shader& other );
+		const Shader& operator=(const Shader& other);
 
-		void Source( const std::string& code );
+		void Source(const std::string& code);
 		void Compile();
+		GLuint Shader::Compile(GLenum type, const char* shaderCode) ;
 
 		std::string GetInfoLog();
+		static Shader Shader::LoadFromFile(ShaderType::shader_type_t type, const std::string& filename);
 
 	private:
 		static GC gc;
-		GLuint obj;
+		GL::ID m_ID{ 0 };
+		std::function<GLuint(GLenum)> m_GeneratorFunc{ glCreateShader };
+		std::function<void(GLuint)>  m_DeleterFunc{ glDeleteShader };
+		static bool getFileContents(const std::string& filename, std::vector<char>& buffer);
+
 	};
 }
 

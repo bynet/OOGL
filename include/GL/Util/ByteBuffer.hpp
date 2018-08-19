@@ -125,7 +125,7 @@ namespace GL
 		ByteWriter( bool littleEndian ) : littleEndian( littleEndian ) {};
 
 		uchar* Data() { return &buffer[0]; }
-		uint Length() { return buffer.size(); }
+		size_t Length() { return buffer.size(); }
 
 		void Pad( uint count )
 		{

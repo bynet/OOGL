@@ -28,7 +28,8 @@ namespace GL
 {
 	Framebuffer::Framebuffer( const Framebuffer& other )
 	{
-		gc.Copy( other.obj, obj );
+		//gc.Copy( other.obj, obj );
+		gc.Copy(obj, other.obj);
 		texColor = other.texColor;
 		texDepth = other.texDepth;
 	}
@@ -51,7 +52,8 @@ namespace GL
 		else throw FramebufferException();
 
 		// Create FBO		
-		gc.Create( obj, glGenFramebuffers, glDeleteFramebuffers );
+		//gc.Create( obj, glGenFramebuffers, glDeleteFramebuffers );
+		obj = gc.Create(glGenFramebuffers);
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, obj );
 
 		// Create texture to hold color buffer
@@ -78,7 +80,8 @@ namespace GL
 
 	Framebuffer::~Framebuffer()
 	{
-		gc.Destroy( obj );
+		gc.Destroy(obj, glDeleteFramebuffers);
+		//gc.Destroy( obj );
 	}
 
 	Framebuffer::operator GLuint() const
@@ -88,7 +91,9 @@ namespace GL
 
 	const Framebuffer& Framebuffer::operator=( const Framebuffer& other )
 	{
-		gc.Copy( other.obj, obj, true );
+		//gc.Copy( other.obj, obj, true );
+		gc.Destroy(obj, glDeleteBuffers);
+		gc.Copy(obj, other.obj);
 		texColor = other.texColor;
 		texDepth = other.texDepth;
 		

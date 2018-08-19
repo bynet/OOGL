@@ -37,8 +37,17 @@
 #undef Always
 #endif
 
+#if defined(OOGL_PLATFORM_SDL)
+ #include <SDL.h>
+#endif 
+
 namespace GL
 {
+	class Exception : public std::runtime_error {
+	public:
+		Exception(const char* msg) : std::runtime_error(msg) { }
+	};
+
 	/*
 		Buffer types
 	*/
@@ -137,6 +146,7 @@ namespace GL
 			return "No pixel format could be found with support for the specified buffer depths and anti-aliasing.";
 		}
 	};
+
 	
 	/*
 		OpenGL context
@@ -184,12 +194,14 @@ namespace GL
 	private:
 		friend class Window;
 		
-		Context();
 
 		bool owned;
 		GLint defaultViewport[4];
+#if defined(OOGL_PLATFORM_SDL)
+		SDL_GLContext context;
 
-#if defined( OOGL_PLATFORM_WINDOWS )
+#elif defined( OOGL_PLATFORM_WINDOWS )
+		Context();
 		Context( uchar color, uchar depth, uchar stencil, uint antialias, HDC dc );
 
 		HDC dc;
@@ -197,6 +209,7 @@ namespace GL
 
 		LARGE_INTEGER timeOffset;
 #elif defined( OOGL_PLATFORM_LINUX )
+		Context();
 		Context( uchar color, uchar depth, uchar stencil, uint antialias, Display* display, int screen, ::Window window );
 
 		GLXWindow glxWindow;

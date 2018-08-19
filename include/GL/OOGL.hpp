@@ -51,8 +51,10 @@
 /*
 	OpenGL
 */
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
 
-#include <GL/GL/Extensions.hpp>
 #include <GL/GL/Context.hpp>
 #include <GL/GL/Shader.hpp>
 #include <GL/GL/Program.hpp>

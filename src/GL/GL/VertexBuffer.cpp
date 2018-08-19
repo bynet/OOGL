@@ -24,67 +24,61 @@
 
 namespace GL
 {
-	VertexBuffer::VertexBuffer()
-	{
-		gc.Create( obj, glGenBuffers, glDeleteBuffers );
+
+	VertexBuffer::VertexBuffer() {
+		m_ID = gc.Create(m_GeneratorFunc);
 	}
 
-	VertexBuffer::VertexBuffer( const VertexBuffer& other )
-	{
-		gc.Copy( other.obj, obj );
+	VertexBuffer::VertexBuffer(const VertexBuffer& rhs) {
+		gc.Copy(m_ID, rhs.m_ID);
 	}
 
-	VertexBuffer::VertexBuffer( const void* data, size_t length, BufferUsage::buffer_usage_t usage )
-	{
-		gc.Create( obj, glGenBuffers, glDeleteBuffers );
-		Data( data, length, usage );
+	VertexBuffer::VertexBuffer(const void* data, size_t length, BufferUsage::buffer_usage_t usage){
+		m_ID = gc.Create(m_GeneratorFunc);
+		Data(data, length ,  usage);
 	}
 
-	VertexBuffer::VertexBuffer( const Mesh& mesh, BufferUsage::buffer_usage_t usage, std::function<void ( const Vertex& v, VertexDataBuffer& data )> f )
+	VertexBuffer::VertexBuffer(const Mesh& mesh, BufferUsage::buffer_usage_t usage, std::function<void(const Vertex& v, VertexDataBuffer& data)> f)
 	{
 		VertexDataBuffer data;
 		const Vertex* vertices = mesh.Vertices();
 		uint count = mesh.VertexCount();
 
-		for ( uint i = 0; i < count; i++ )
-			f( vertices[i], data );
+		for (uint i = 0; i < count; i++)
+			f(vertices[i], data);
 
-		gc.Create( obj, glGenBuffers, glDeleteBuffers );
-		Data( data.Pointer(), data.Size(), usage );
+		m_ID = gc.Create(m_GeneratorFunc);
+		Data(data.Pointer(), data.Size(), usage);
 	}
 
 	VertexBuffer::~VertexBuffer()
 	{
-		gc.Destroy( obj );
+		gc.Destroy(m_ID, m_DeleterFunc);
 	}
 
-	VertexBuffer::operator GLuint() const
-	{
-		return obj;
+	VertexBuffer::operator GLuint() const {
+		return m_ID;
 	}
 
-	const VertexBuffer& VertexBuffer::operator=( const VertexBuffer& other )
-	{
-		gc.Copy( other.obj, obj, true );
+	const VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rhs) {
+		gc.Destroy(m_ID, m_DeleterFunc);
+		gc.Copy(m_ID, rhs.m_ID);
 		return *this;
 	}
 
-	void VertexBuffer::Data( const void* data, size_t length, BufferUsage::buffer_usage_t usage )
-	{
-		glBindBuffer( GL_ARRAY_BUFFER, obj );
-		glBufferData( GL_ARRAY_BUFFER, length, data, usage );
+	void VertexBuffer::Data( const void* data, size_t length, BufferUsage::buffer_usage_t usage ) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+		glBufferData(GL_ARRAY_BUFFER, length , data, usage);
 	}
 
-	void VertexBuffer::SubData( const void* data, size_t offset, size_t length )
-	{
-		glBindBuffer( GL_ARRAY_BUFFER, obj );
-		glBufferSubData( GL_ARRAY_BUFFER, offset, length, data );
+	void VertexBuffer::SubData( const void* data, size_t offset, size_t length ){
+		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+		glBufferSubData(GL_ARRAY_BUFFER, offset, length, data);
 	}
 
-	void VertexBuffer::GetSubData( void* data, size_t offset, size_t length )
-	{
-		glBindBuffer( GL_ARRAY_BUFFER, obj );
-		glGetBufferSubData( GL_ARRAY_BUFFER, offset, length, data );
+	void VertexBuffer::GetSubData( void* data, size_t offset, size_t length ) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+		glGetBufferSubData(GL_ARRAY_BUFFER, offset, length, data);
 	}
 
 	GC VertexBuffer::gc;

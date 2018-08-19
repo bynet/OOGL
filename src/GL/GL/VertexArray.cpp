@@ -25,49 +25,54 @@ namespace GL
 {
 	VertexArray::VertexArray()
 	{
-		gc.Create( obj, glGenVertexArrays, glDeleteVertexArrays );
+		m_ID = gc.Create(m_GeneratorFunc);
 	}
 
-	VertexArray::VertexArray( const VertexArray& other )
+	VertexArray::VertexArray(const VertexArray& rhs)
 	{
-		gc.Copy( other.obj, obj );
+		gc.Copy(m_ID, rhs.m_ID);
 	}
 
 	VertexArray::~VertexArray()
 	{
-		gc.Destroy( obj );
+		gc.Destroy(m_ID, m_DeleterFunc);
 	}
+
+
 
 	VertexArray::operator GLuint() const
 	{
-		return obj;
+		return m_ID;
 	}
 
-	const VertexArray& VertexArray::operator=( const VertexArray& other )
+	const VertexArray& VertexArray::operator=(const VertexArray& rhs)
 	{
-		gc.Copy( other.obj, obj, true );
+		gc.Destroy(m_ID, m_DeleterFunc);
+		gc.Copy(m_ID, rhs.m_ID);
 		return *this;
 	}
 
-	void VertexArray::BindAttribute( const Attribute& attribute, const VertexBuffer& buffer, Type::type_t type, uint count, uint stride, intptr_t offset )
+
+	void VertexArray::BindAttribute(const Attribute& attribute, const VertexBuffer& buffer, Type::type_t type, uint count, uint stride, intptr_t offset)
 	{
-		glBindVertexArray( obj );
-		glBindBuffer( GL_ARRAY_BUFFER, buffer );
-		glEnableVertexAttribArray( attribute );
-		glVertexAttribPointer( attribute, count, type, GL_FALSE, stride, (const GLvoid*)offset );
+		glBindVertexArray(m_ID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer); //check this : cihangir
+		glEnableVertexAttribArray(attribute);
+		glVertexAttribPointer(attribute, count, type, GL_FALSE, stride, (const GLvoid*)offset);
 	}
 
-	void VertexArray::BindElements( const VertexBuffer& elements )
+	void VertexArray::BindElements(const VertexBuffer& elements)
 	{
-		glBindVertexArray( obj );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, elements );
+		glBindVertexArray(m_ID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elements);
 	}
 
-	void VertexArray::BindTransformFeedback( uint index, const VertexBuffer& buffer )
+	void VertexArray::BindTransformFeedback(uint index, const VertexBuffer& buffer)
 	{
-		glBindVertexArray( obj );
-		glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer );
+		glBindVertexArray(m_ID);
+		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer);
 	}
+
 
 	GC VertexArray::gc;
 }

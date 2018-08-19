@@ -20,7 +20,10 @@
 */
 
 #include <GL/GL/Context.hpp>
-#include <GL/GL/Extensions.hpp>
+
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
 
 namespace GL
 {

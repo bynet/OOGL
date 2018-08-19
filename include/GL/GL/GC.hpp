@@ -25,21 +25,28 @@
 #define OOGL_GC_HPP
 
 #include <GL/Platform.hpp>
-#include <map>
+#include <functional>
 
+#if defined( OOGL_PLATFORM_WINDOWS) || defined(OOGL_PLATFORM_UNIX)
+ #include <map>
+#elif defined(OOGL_PLATFORM_SDL)
+ #include <unordered_map>
+#endif
+
+using namespace std;
 namespace GL
 {
 	/*
 		OpenGL object creation/destruction function prototypes
 	*/
-#if defined( OOGL_PLATFORM_WINDOWS )
-	typedef void ( __stdcall * createFunc ) ( GLsizei, GLuint* );
-	typedef void ( __stdcall * deleteFunc ) ( GLsizei, const GLuint* );
-	typedef void ( __stdcall * deleteFunc2 ) ( GLuint );
+#if defined( OOGL_PLATFORM_WINDOWS) 
+	typedef void(__stdcall * createFunc) (GLsizei, GLuint*);
+	typedef void(__stdcall * deleteFunc) (GLsizei, const GLuint*);
+	typedef void(__stdcall * deleteFunc2) (GLuint);
 #elif defined( OOGL_PLATFORM_LINUX )
-	typedef void ( * createFunc ) ( GLsizei, GLuint* );
-	typedef void ( * deleteFunc ) ( GLsizei, const GLuint* );
-	typedef void ( * deleteFunc2 ) ( GLuint );
+	typedef void(*createFunc) (GLsizei, GLuint*);
+	typedef void(*deleteFunc) (GLsizei, const GLuint*);
+	typedef void(*deleteFunc2) (GLuint);
 #endif
 
 	/*
@@ -47,49 +54,36 @@ namespace GL
 	*/
 	class GC
 	{
-	public:		
-		void Create( GLuint& obj, createFunc c, deleteFunc d )
-		{
-			c( 1, &obj );
-			refs.insert( std::pair<GLuint, uint>( obj, 1 ) );
-			
-			this->d = d;
-			this->d2 = 0;
-		}
+#if defined(OOGL_PLATFORM_WINDOWS) || defined( OOGL_PLATFORM_LINUX ) 
+	public:
 
-		int Create( const GLuint& obj, deleteFunc2 d2 )
-		{
-			refs.insert( std::pair<GLuint, uint>( obj, 1 ) );
-
-			this->d = 0;
-			this->d2 = d2;
-			
-			return obj;
-		}
-
-		void Copy( const GLuint& from, GLuint& to, bool destructive = false )
-		{
-			if ( destructive )
-				Destroy( to );
-
-			to = from;
-			refs[from]++;
-		}
-
-		void Destroy( GLuint& obj )
-		{
-			if ( --refs[obj] == 0 )
-			{
-				if ( d != 0 ) d( 1, &obj ); else d2( obj );
-				refs.erase( obj );
-			}
-		}
+		void Create(GLuint& obj, createFunc c, deleteFunc d);
+		int  Create(const GLuint& obj, deleteFunc2 d2);
+		void Copy(const GLuint& from, GLuint& to, bool destructive = false);
+		void Destroy(GLuint& obj);
 
 	private:
 		std::map<GLuint, uint> refs;
 		deleteFunc d;
 		deleteFunc2 d2;
+
+#elif defined(OOGL_PLATFORM_SDL)
+	private:
+
+		unordered_map<ID, uint16_t> refs;
+
+	public:
+
+		ID   Create(ID id);
+		ID   Create(function<ID()>);
+		ID   Create(function<void(GLsizei, GL::ID*)> generatorFunc);
+
+		void Copy(ID& dst, const ID& src);
+		void Destroy(ID& obj, std::function<void(GLsizei, const ID*)> deleterFunc);
+		void Destroy(ID& obj, std::function<void(GLuint)> deleterFunc);
+
+#endif
 	};
-}
+};
 
 #endif

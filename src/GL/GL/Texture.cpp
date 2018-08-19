@@ -21,27 +21,32 @@
 
 #include <GL/GL/Texture.hpp>
 
-#define PUSHSTATE() GLint restoreId; glGetIntegerv( GL_TEXTURE_BINDING_2D, &restoreId );
-#define POPSTATE() glBindTexture( GL_TEXTURE_2D, restoreId );
+#if defined(PLATFORM_OOGL_SDL)
+ #define PUSHSTATE() //check this : cihangir
+ #define POPSTATE() //check this : cihangir
+#else 
+ #define PUSHSTATE() GLint restoreId; glGetIntegerv( GL_TEXTURE_BINDING_2D, &restoreId );
+ #define POPSTATE() glBindTexture( GL_TEXTURE_2D, restoreId );
+#endif 
 
 namespace GL
 {
 	Texture::Texture()
 	{
-		gc.Create( obj, glGenTextures, glDeleteTextures );
+	       m_ID = gc.Create(m_GeneratorFunc);
 	}
 
 	Texture::Texture( const Texture& other )
 	{
-		gc.Copy( other.obj, obj );
+			gc.Copy(m_ID, other.m_ID);
 	}
 
 	Texture::Texture( const Image& image, InternalFormat::internal_format_t internalFormat )
 	{
 		PUSHSTATE()
 
-		gc.Create( obj, glGenTextures, glDeleteTextures );
-		glBindTexture( GL_TEXTURE_2D, obj );
+		m_ID = gc.Create(m_GeneratorFunc);
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		
 		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, image.GetWidth(), image.GetHeight(), 0, Format::RGBA, DataType::UnsignedByte, image.GetPixels() );
 
@@ -57,25 +62,27 @@ namespace GL
 
 	Texture::~Texture()
 	{
-		gc.Destroy( obj );
+		gc.Destroy(m_ID, m_DeleterFunc);
 	}
 
 	Texture::operator GLuint() const
 	{
-		return obj;
+		return m_ID;
 	}
 
 	const Texture& Texture::operator=( const Texture& other )
 	{
-		gc.Copy( other.obj, obj, true );
-		return *this;
+		//gc.Copy( other.obj, obj, true );
+		gc.Destroy(m_ID, m_DeleterFunc);
+		gc.Copy(m_ID, other.m_ID);
+		return *this; 
 	}
 
 	void Texture::Image2D( const GLvoid* data, DataType::data_type_t type, Format::format_t format, uint width, uint height, InternalFormat::internal_format_t internalFormat )
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, data );
 
 		POPSTATE()
@@ -85,23 +92,34 @@ namespace GL
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID  );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s );
 
+#if !defined(OOGL_PLATFORM_SDL)
 		glBindTexture( GL_TEXTURE_2D, restoreId );
+#endif
 
 		POPSTATE()
+	}
+
+
+	void Texture::Bind(uchar unit)
+	{
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, m_ID);
 	}
 
 	void Texture::SetWrapping( Wrapping::wrapping_t s, Wrapping::wrapping_t t )
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t );
 
+#if !defined(OOGL_PLATFORM_SDL)
 		glBindTexture( GL_TEXTURE_2D, restoreId );
+#endif
 
 		POPSTATE()
 	}
@@ -110,7 +128,7 @@ namespace GL
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID  );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, r );
@@ -122,7 +140,7 @@ namespace GL
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag );
 
@@ -133,7 +151,7 @@ namespace GL
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		float col[4] = { color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f };
 		glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, col );
 
@@ -144,7 +162,7 @@ namespace GL
 	{
 		PUSHSTATE()
 
-		glBindTexture( GL_TEXTURE_2D, obj );
+		glBindTexture( GL_TEXTURE_2D, m_ID );
 		glGenerateMipmap( GL_TEXTURE_2D );
 
 		POPSTATE()

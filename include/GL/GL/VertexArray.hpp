@@ -1,5 +1,6 @@
 /*
 	Copyright (C) 2012 Alexander Overvoorde
+	
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of
 	this software and associated documentation files (the "Software"), to deal in
@@ -33,24 +34,26 @@ namespace GL
 	*/
 	class VertexArray
 	{
-	public:
-		VertexArray();
-		VertexArray( const VertexArray& other );
-
-		~VertexArray();
-
-		operator GLuint() const;
-		const VertexArray& operator=( const VertexArray& other );
-
-		void BindAttribute( const Attribute& attribute, const VertexBuffer& buffer, Type::type_t type, uint count, uint stride, intptr_t offset );
-
-		void BindElements( const VertexBuffer& elements );
-
-		void BindTransformFeedback( uint index, const VertexBuffer& buffer );
-
 	private:
 		static GC gc;
-		GLuint obj;
+		std::function<void(GLsizei, GL::ID*)> m_GeneratorFunc{ glGenVertexArrays };
+		std::function<void(GLsizei, const GL::ID*)> m_DeleterFunc{ glDeleteVertexArrays };
+		ID m_ID{ 0 };
+
+	public:
+		VertexArray();
+		VertexArray(const VertexArray& rhs);
+		operator GLuint() const;
+
+		~VertexArray();
+		const VertexArray& operator=(const VertexArray& other);
+
+		void BindAttribute(const Attribute& attribute, const VertexBuffer& buffer, Type::type_t type, uint count, uint stride, intptr_t offset);
+
+		void BindElements(const VertexBuffer& elements);
+
+		void BindTransformFeedback(uint index, const VertexBuffer& buffer);
+
 	};
 }
 

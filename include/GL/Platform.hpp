@@ -29,10 +29,19 @@
 */
 
 #if defined( _WIN32 )
-	#define OOGL_PLATFORM_WINDOWS
+    #define OOGL_PLATFORM_SDL
+	//#define OOGL_PLATFORM_WINDOWS
+		
+ #ifdef OOGL_PLATFORM_SDL 
+    #include <GL/glew.h>
+ #endif 
+
+ #ifdef OOGL_PLATFORM_WINDOWS 
 	#include <Windows.h>
 	#include <WindowsX.h>
 	#include <GL/GL.h>
+ #endif 
+
 #elif defined( __linux__ )
 	#define OOGL_PLATFORM_LINUX
 	#include <X11/Xlib.h>
@@ -71,6 +80,14 @@ namespace GL
 
 	typedef GLint Attribute;
 	typedef GLint Uniform;
+
+	using ID    = GLuint;
+	using INDEX = GLint;
+	using COUNT = GLint;
+	using SIZE  = GLsizei;
+
+
+
 }
 
 #endif

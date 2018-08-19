@@ -21,71 +21,142 @@
 
 #include <GL/GL/Shader.hpp>
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <logger.h>
 
 namespace GL
 {
-	Shader::Shader( const Shader& other )
+	Shader::Shader(const Shader& rhs)
 	{
-		gc.Copy( other.obj, obj );
+		gc.Copy(m_ID, rhs.m_ID);
 	}
 
-	Shader::Shader( ShaderType::shader_type_t shader )
+	Shader::Shader(ShaderType::shader_type_t shader)
 	{
-		obj = gc.Create( glCreateShader( shader ), glDeleteShader );
+		m_ID = gc.Create(glCreateShader(shader));
 	}
 
-	Shader::Shader( ShaderType::shader_type_t shader, const std::string& code )
+	Shader::Shader(ShaderType::shader_type_t shader, const std::string& code)
 	{
-		obj = gc.Create( glCreateShader( shader ), glDeleteShader );
-		Source( code );
+		m_ID = gc.Create(glCreateShader(shader));
+		Source(code);
 		Compile();
 	}
 
 	Shader::~Shader()
 	{
-		gc.Destroy( obj );
+		gc.Destroy(m_ID, m_DeleterFunc);
 	}
 
 	Shader::operator GLuint() const
 	{
-		return obj;
+		return m_ID;
 	}
 
-	const Shader& Shader::operator=( const Shader& other )
+	const Shader& Shader::operator=(const Shader& rhs)
 	{
-		gc.Copy( other.obj, obj, true );
+		gc.Destroy(m_ID, m_DeleterFunc);
+		gc.Copy(m_ID, rhs.m_ID);
 		return *this;
 	}
 
-	void Shader::Source( const std::string& code )
+	Shader Shader::LoadFromFile(ShaderType::shader_type_t  type, const std::string& filename)
+	{
+		GL::ID shader_id = -1;
+
+		Z::INFO() << "Loading shader ... " << filename;
+
+		// Read the file
+		std::vector<char> contents;
+		if (!getFileContents(filename, contents))
+		{
+			throw ShaderFileException();
+		}
+
+		//return compile(type , &shader[0] );
+		return Shader(type, std::string(&contents[0]));
+
+	}
+
+	void Shader::Source(const std::string& code)
 	{
 		const char* c = code.c_str();
-		glShaderSource( obj, 1, &c, NULL );
+		glShaderSource(m_ID, 1, &c, NULL);
 	}
 
 	void Shader::Compile()
 	{
-		GLint res;
+		GLint res{ 0 };
 
-		glCompileShader( obj );
-		glGetShaderiv( obj, GL_COMPILE_STATUS, &res );
+		glCompileShader(m_ID);
+		glGetShaderiv(m_ID, GL_COMPILE_STATUS, &res);
 
-		if ( res == GL_FALSE )
-			throw CompileException( GetInfoLog() );
+		if (res == GL_FALSE)
+			throw CompileException(GetInfoLog());
 	}
 
 	std::string Shader::GetInfoLog()
 	{
-		GLint res;
-		glGetShaderiv( obj, GL_INFO_LOG_LENGTH, &res );
+		GLint res{ 0 };
+		glGetShaderiv(m_ID, GL_INFO_LOG_LENGTH, &res);
 
-		if ( res > 0 )
+		if (res > 0)
 		{
-			std::string infoLog( res, 0 );
-			glGetShaderInfoLog( obj, res, &res, &infoLog[0] );
+			std::string infoLog(res, 0);
+			glGetShaderInfoLog(m_ID, res, &res, &infoLog[0]);
 			return infoLog;
-		} else {
+		}
+		else {
 			return "";
+		}
+	}
+
+	GLuint Shader::Compile(GLenum type, const char* shaderCode) {
+
+		GLuint _id = glCreateShader(type);
+		glShaderSource(_id, 1, &shaderCode, NULL);
+		glCompileShader(_id);
+
+		GLint Result = false;
+		int   InfoLogLength = 0;
+
+		glGetShaderiv(_id, GL_COMPILE_STATUS, &Result);
+		if (!Result) {
+			Z::ERROR() << "Shader file compilation failed " << __FILE__ << __LINE__;
+		}
+
+		glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if (InfoLogLength > 0) {
+			std::vector<char> ErrorMessage(InfoLogLength + 1);
+			glGetShaderInfoLog(_id, InfoLogLength, NULL, &ErrorMessage[0]);
+			Z::ERROR() << string(&ErrorMessage[0]).c_str();
+		}
+
+		return _id;
+
+	}
+	// Read the contents of a file into an array of char
+	bool Shader::getFileContents(const std::string& filename, std::vector<char>& buffer)
+	{
+		std::ifstream file(filename.c_str(), std::ios_base::binary);
+		if (file)
+		{
+			file.seekg(0, std::ios_base::end);
+			std::streamsize size = file.tellg();
+			if (size > 0)
+			{
+				file.seekg(0, std::ios_base::beg);
+				buffer.resize(static_cast<std::size_t>(size));
+				file.read(&buffer[0], size);
+			}
+			buffer.push_back('\0');
+			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 

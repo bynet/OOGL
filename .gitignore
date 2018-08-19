@@ -21,3 +21,7 @@ lib/
 bin/
 Debug/
 Release/
+build/
+.vs/
+
+CMakeSettings.json

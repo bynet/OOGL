@@ -26,7 +26,11 @@
 
 #include <GL/Platform.hpp>
 #include <GL/GL/GC.hpp>
-#include <GL/GL/Extensions.hpp>
+
+#if !defined(__GLEW_H__)
+ #include <GL/GL/Extensions.hpp>
+#endif
+
 #include <GL/Util/Mesh.hpp>
 #include <GL/Math/Vec4.hpp>
 #include <functional>
@@ -72,7 +76,7 @@ namespace GL
 		void Vec4( const Vec4& v ) { Bytes( (uchar*)&v, sizeof( v ) ); }
 
 		void* Pointer() { return &data[0]; }
-		int Size() { return data.size(); }
+		size_t Size() { return data.size(); }
 
 	private:
 		std::vector<uchar> data;
@@ -105,8 +109,12 @@ namespace GL
 		void GetSubData( void* data, size_t offset, size_t length );
 
 	private:
+		GLuint m_ID{ 0 };
+
 		static GC gc;
-		GLuint obj;
+		std::function<void(GLsizei, ID*)> m_GeneratorFunc{ glGenBuffers };
+		std::function<void(GLsizei, const ID*)> m_DeleterFunc{ glDeleteBuffers };
+
 	};
 }
 

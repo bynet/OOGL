@@ -21,10 +21,12 @@
 
 #pragma once
 
+
 #ifndef OOGL_EXTENSIONS_HPP
 #define OOGL_EXTENSIONS_HPP
 
 #include <GL/Platform.hpp>
+
 
 /*
 	OpenGL context creation/configuration
@@ -478,3 +480,4 @@ namespace GL
 }
 
 #endif
+
