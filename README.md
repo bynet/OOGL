@@ -1,7 +1,7 @@
 # Addition
   SDL2 window support . 
-  CMake support
-  glew integration
+  CMake support.
+  Glew integration
 
 
 # OOGL
